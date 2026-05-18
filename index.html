@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>GetJob – Méně hledání, více pohovorů</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;1,700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#0053D2",
+            "on-background": "#151C27",
+            outline: "#727687",
+            background: "#F9F9FF",
+            "outline-variant": "#C2C6D8",
+            secondary: "#006A60",
+            tertiary: "#535B7A",
+            "titan-white": "#F9F9FF",
+            mirage: "#151C27",
+            mako: "#424655",
+            zircon: "#F0F3FF",
+          },
+          fontSize: {
+            "display-lg": ["48px", { lineHeight: "57.6px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-lg": ["32px", { lineHeight: "41.6px", fontWeight: "700" }],
+            "feature-title": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "body-lg": ["18px", { lineHeight: "28.8px", fontWeight: "400" }],
+            "label-md": ["14px", { lineHeight: "16.8px", fontWeight: "600" }],
+          },
+          maxWidth: { canvas: "1280px" },
+          boxShadow: {
+            ambient: "0px 4px 20px 0px rgba(10, 19, 46, 0.05)",
+            cta: "0px 20px 40px 0px rgba(0, 83, 210, 0.2)",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-fast: 200ms;
+      --duration-normal: 400ms;
+      --duration-slow: 700ms;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Poppins, sans-serif;
+    }
+
+  /* Figma horizontal inset: 320px @ 1920, fluid below */
+    .section-x {
+      padding-left: max(24px, calc((100% - 1280px) / 2));
+      padding-right: max(24px, calc((100% - 1280px) / 2));
+    }
+    @media (min-width: 1536px) {
+      .section-x { padding-left: 320px; padding-right: 320px; }
+    }
+
+    .ambient-shadow { box-shadow: 0px 4px 20px rgba(10, 19, 46, 0.05); }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition:
+        opacity var(--duration-slow) var(--ease-out-expo),
+        transform var(--duration-slow) var(--ease-out-expo);
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 80ms; }
+    .reveal-delay-2 { transition-delay: 160ms; }
+    .reveal-delay-3 { transition-delay: 240ms; }
+    .reveal-delay-4 { transition-delay: 320ms; }
+
+    /* Hero load-in */
+    .hero-enter {
+      opacity: 0;
+      transform: translateY(24px);
+      animation: heroIn var(--duration-slow) var(--ease-out-expo) forwards;
+    }
+    .hero-enter-d1 { animation-delay: 100ms; }
+    .hero-enter-d2 { animation-delay: 200ms; }
+    .hero-enter-d3 { animation-delay: 320ms; }
+    .hero-enter-d4 { animation-delay: 440ms; }
+    .hero-visual-enter {
+      opacity: 0;
+      transform: translateX(32px) scale(0.98);
+      animation: heroVisualIn 900ms var(--ease-out-expo) 300ms forwards;
+    }
+
+    @keyframes heroIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroVisualIn {
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* Floating orb pulse */
+    .orb-glow {
+      animation: orbPulse 6s var(--ease-smooth) infinite;
+    }
+    @keyframes orbPulse {
+      0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+    }
+
+    /* Hero job cards stack (Figma overlap) */
+    .hero-job-stack {
+      padding-bottom: 28px;
+    }
+    .hero-job-card {
+      box-shadow: 0px 4px 20px rgba(10, 19, 46, 0.05);
+    }
+    .hero-job-card.card-lift:hover {
+      transform: translateY(-4px);
+    }
+    .hero-float-card {
+      left: -44px;
+      bottom: 24px;
+      z-index: 20;
+    }
+    .float-badge-motion {
+      animation: floatBadge 4s var(--ease-smooth) infinite;
+    }
+    @keyframes floatBadge {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* Interactive cards */
+    .card-lift {
+      transition:
+        transform var(--duration-normal) var(--ease-out-expo),
+        box-shadow var(--duration-normal) var(--ease-smooth),
+        border-color var(--duration-fast) var(--ease-smooth);
+    }
+    .card-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0px 12px 32px rgba(10, 19, 46, 0.1);
+    }
+
+    .btn-primary {
+      transition:
+        transform var(--duration-fast) var(--ease-out-expo),
+        box-shadow var(--duration-fast) var(--ease-smooth),
+        opacity var(--duration-fast) var(--ease-smooth),
+        background-color var(--duration-fast) var(--ease-smooth);
+    }
+    .btn-primary:hover {
+      transform: scale(1.03);
+      box-shadow: 0px 8px 24px rgba(0, 83, 210, 0.35);
+    }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-ghost {
+      transition:
+        transform var(--duration-fast) var(--ease-out-expo),
+        box-shadow var(--duration-fast) var(--ease-smooth),
+        background-color var(--duration-fast) var(--ease-smooth);
+    }
+    .btn-ghost:hover {
+      transform: scale(1.04);
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.12);
+    }
+    .btn-ghost:active { transform: scale(0.98); }
+
+    .nav-link {
+      position: relative;
+      transition: color var(--duration-fast) var(--ease-smooth);
+    }
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 100%;
+      height: 2px;
+      background: #0053D2;
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform var(--duration-normal) var(--ease-out-expo);
+    }
+    .nav-link:hover::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .header-bar {
+      transition:
+        background-color var(--duration-normal) var(--ease-smooth),
+        box-shadow var(--duration-normal) var(--ease-smooth);
+    }
+    .header-bar.is-scrolled {
+      background: rgba(249, 249, 255, 0.95) !important;
+      box-shadow: 0px 4px 24px rgba(10, 19, 46, 0.08) !important;
+    }
+
+    .waitlist-box {
+      transition:
+        border-color var(--duration-fast) var(--ease-smooth),
+        box-shadow var(--duration-normal) var(--ease-smooth);
+    }
+    .waitlist-box:focus-within {
+      border-color: #0053D2;
+      box-shadow: 0 0 0 3px rgba(0, 83, 210, 0.15);
+    }
+
+    .step-circle {
+      transition:
+        transform var(--duration-normal) var(--ease-out-expo),
+        box-shadow var(--duration-normal) var(--ease-smooth);
+    }
+    .step-item:hover .step-circle {
+      transform: scale(1.08);
+      box-shadow: 0px 8px 24px rgba(0, 83, 210, 0.2);
+    }
+
+    .cta-orb {
+      animation: ctaOrbDrift 8s var(--ease-smooth) infinite alternate;
+    }
+    .cta-orb-2 { animation-delay: -4s; }
+    @keyframes ctaOrbDrift {
+      from { transform: translate(0, 0); }
+      to { transform: translate(12px, -12px); }
+    }
+
+    .process-line {
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 1s var(--ease-out-expo);
+    }
+    .process-line.is-drawn { transform: scaleX(1); }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal, .hero-enter, .hero-visual-enter {
+        opacity: 1;
+        transform: none;
+        animation: none;
+        transition: none;
+      }
+      .orb-glow, .float-badge-motion, .cta-orb { animation: none; }
+      .card-lift:hover, .btn-primary:hover, .btn-ghost:hover,
+      .step-item:hover .step-circle { transform: none; }
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background text-body-md antialiased min-h-screen flex flex-col">
+
+  <!-- 0. Header (Figma: TopNavBar, sticky y:0) -->
+  <header
+    id="site-header"
+    class="header-bar sticky top-0 z-50"
+    style="background: rgba(249, 249, 255, 0.8); backdrop-filter: blur(12px); box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);"
+  >
+    <div class="section-x flex items-center justify-between gap-6 py-4 max-w-[1920px] mx-auto w-full">
+      <a href="#" class="flex-shrink-0 transition-opacity duration-300 hover:opacity-80">
+        <img alt="GetJob" class="h-[44px] w-auto lg:h-[52px]" src="assets/images/logo-header.png" width="181" height="88" />
+      </a>
+      <nav class="hidden lg:flex items-center justify-center gap-12 flex-1" aria-label="Hlavní navigace">
+        <a class="nav-link text-label-md text-mako hover:text-primary" href="#functions">Funkce</a>
+        <a class="nav-link text-label-md text-mako hover:text-primary" href="#how-it-works">Jak to funguje?</a>
+        <a class="nav-link text-label-md text-mako hover:text-primary" href="#cta">FAQ</a>
+      </nav>
+      <a class="btn-primary text-label-md text-white bg-primary px-6 py-3 rounded-lg whitespace-nowrap flex-shrink-0" href="#waitlist">
+        Přidat se do waitlistu
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas (Figma section order by y-position) -->
+  <main class="flex-grow flex flex-col">
+
+    <!-- 1. Hero Section (y:0, padding 120px 320px 100px) -->
+    <section
+      id="hero"
+      class="section-x pt-16 pb-[60px] md:pt-[120px] md:pb-[100px] overflow-hidden bg-background order-1"
+      aria-label="Úvod"
+    >
+      <div class="max-w-canvas mx-auto px-0 md:px-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-start relative">
+        <div class="max-w-[560px] lg:pt-11">
+          <h1 class="hero-enter text-display-lg text-mirage mb-3">
+            Méně hledání,
+            <span class="font-bold italic text-primary">více pohovorů</span>
+          </h1>
+          <p class="hero-enter hero-enter-d1 text-body-lg text-mako mb-9 max-w-[560px]">
+            GetJob spojuje sílu umělé inteligence s vaším potenciálem.
+            Najděte práci, která vám skutečně sedne, nechte si napsat
+            motivační dopis na míru a připravte se na pohovor jako
+            profesionál.
+          </p>
+          <div
+            id="waitlist"
+            class="hero-enter hero-enter-d2 waitlist-box bg-white rounded-xl ambient-shadow border border-outline-variant flex flex-col sm:flex-row w-full max-w-[448px] sm:h-[58px] items-stretch sm:items-center relative p-2 sm:p-0 gap-2 sm:gap-0"
+          >
+            <div class="flex items-center flex-1 min-w-0 sm:pl-1">
+              <span class="material-symbols-outlined text-outline ml-2 mr-1 text-[24px] flex-shrink-0">mail</span>
+              <input
+                class="flex-grow bg-transparent border-none focus:ring-0 text-body-md text-mirage placeholder:text-outline-variant py-2 sm:py-3 px-1 outline-none min-w-0"
+                placeholder="Váš školní e-mail (např. @cvut.cz)"
+                required
+                type="email"
+              />
+            </div>
+            <button type="submit" class="btn-primary bg-primary text-white text-label-md px-6 py-3 rounded-lg whitespace-nowrap sm:mr-2 flex-shrink-0 w-full sm:w-auto">
+              Chci včasný přístup
+            </button>
+          </div>
+          <p class="hero-enter hero-enter-d3 text-[16px] leading-[16.8px] font-semibold text-outline mt-3 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px] transition-transform duration-300 group-hover:scale-110">bolt</span>
+            Prvních 50 uživatelu získá exkluzivní slevu na prémiové funkce
+          </p>
+        </div>
+
+        <!-- Hero visual (right column) -->
+        <div class="relative hidden lg:block hero-visual-enter">
+          <div class="orb-glow absolute top-[42%] left-[55%] w-[400px] h-[400px] bg-primary/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
+          <div class="hero-job-stack relative w-full max-w-[569px] ml-auto">
+            <article class="hero-job-card card-lift bg-white rounded-[24px] p-6 border border-outline-variant/30 relative z-10">
+              <header class="flex items-center justify-between gap-4 mb-6 pb-3 border-b border-outline-variant/50">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-[41px] h-[41px] shrink-0 bg-secondary/10 rounded-lg flex items-center justify-center">
+                    <span class="material-symbols-outlined text-secondary text-[25px]">work</span>
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="text-[14px] leading-[16.8px] font-bold text-mirage">UX/UI Designer Junior</h3>
+                    <p class="text-label-md text-mako mt-0.5">TechStart Praha • Remote</p>
+                  </div>
+                </div>
+                <div class="shrink-0 bg-secondary/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">target</span>
+                  <span class="text-label-md text-secondary whitespace-nowrap">94% Match</span>
+                </div>
+              </header>
+              <ul class="space-y-3 mb-6 list-none p-0 m-0">
+                <li class="flex items-center gap-3 text-mako">
+                  <span class="material-symbols-outlined text-primary text-[20px] shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                  <span class="text-body-md">Znalost Figma &amp; Prototyping</span>
+                </li>
+                <li class="flex items-center gap-3 text-mako">
+                  <span class="material-symbols-outlined text-primary text-[20px] shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                  <span class="text-body-md">Zkušenost z VŠ projektů</span>
+                </li>
+              </ul>
+              <div class="bg-zircon rounded-xl p-4 flex items-start gap-3">
+                <span class="material-symbols-outlined text-secondary text-[22px] mt-0.5 shrink-0">smart_toy</span>
+                <p class="text-[14px] leading-[20px] font-semibold italic text-mako m-0">
+                  "Tato pozice skvěle odpovídá vašemu portfoliu ze semestrální práce. AI vygenerovalo návrh průvodního dopisu."
+                </p>
+              </div>
+            </article>
+            <aside class="hero-float-card absolute" aria-label="Stav motivačního dopisu">
+              <div class="float-badge-motion bg-white rounded-xl px-4 py-3 ambient-shadow border border-outline-variant/30 flex items-center gap-3 card-lift">
+                <div class="w-9 h-9 shrink-0 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span class="material-symbols-outlined text-primary text-[18px]">mail</span>
+                </div>
+                <div>
+                  <p class="text-label-md text-mirage leading-tight m-0">Motivační dopis</p>
+                  <p class="text-[12px] leading-4 text-secondary font-medium m-0 mt-0.5">Vygenerováno úspěšně</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Features Section (y:715.56, bg Zircon, padding 80px 320px) -->
+    <section
+      id="functions"
+      class="section-x py-[80px] bg-zircon order-2"
+      aria-label="Funkce"
+    >
+      <div class="max-w-canvas mx-auto px-0 md:px-10">
+        <div class="reveal text-center mb-[80px]">
+          <h2 class="text-headline-lg text-mirage mb-3">Proč zrovna GetJob?</h2>
+          <p class="text-body-md text-mako max-w-[672px] mx-auto text-center">
+            Využíváme nejnovější AI modely, abychom zjednodušili a zrychlili vaši cestu k vysněné kariéře.
+          </p>
+        </div>
+        <!-- Bento: col1 Search | col2 AI dopis | col3 Match Score (Figma x: 0, 408, 816) -->
+        <div class="grid md:grid-cols-3 gap-6 md:min-h-[282px]">
+          <article class="reveal reveal-delay-1 card-lift bg-white rounded-xl p-6 ambient-shadow border border-outline-variant/20 flex flex-col">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
+              <span class="material-symbols-outlined text-primary text-[24px]">search_insights</span>
+            </div>
+            <h3 class="text-feature-title text-mirage mb-3">Inteligentní vyhledávání</h3>
+            <p class="text-body-md text-mako flex-grow">
+              Zapomeňte na nekonečné scrollování nevhodných nabídek. Naše AI analyzuje váš profil, dovednosti a preference, aby vám nabídla pouze pozice, které vám skutečně sedou.
+            </p>
+          </article>
+
+          <article class="reveal reveal-delay-2 card-lift bg-white rounded-xl p-6 ambient-shadow border border-outline-variant/20 flex flex-col relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-bl-full pointer-events-none"></div>
+            <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-6 relative z-10">
+              <span class="material-symbols-outlined text-secondary text-[24px]">edit_document</span>
+            </div>
+            <h3 class="text-feature-title text-mirage mb-3 relative z-10">AI generátor dopisů</h3>
+            <p class="text-body-md text-mako flex-grow relative z-10">
+              Konec prázdného papíru. Vygenerujte si na míru šitý, profesionální průvodní dopis pro konkrétní pozici jedním kliknutím, na základě vašeho CV a požadavků firmy.
+            </p>
+          </article>
+
+          <article class="reveal reveal-delay-3 card-lift bg-white rounded-xl p-6 ambient-shadow border border-outline-variant/20 flex flex-col">
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-6" style="background: rgba(108, 116, 148, 0.2);">
+              <span class="material-symbols-outlined text-tertiary text-[24px]">speed</span>
+            </div>
+            <h3 class="text-feature-title text-mirage mb-3">Match Score 2.0</h3>
+            <p class="text-body-md text-mako flex-grow">
+              Okamžitě zjistěte, jak dobře se hodíte na danou pozici. Získejte detailní rozbor toho, co vám chybí, a tipy, jak tyto nedostatky rychle doplnit před pohovorem.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Process Section (y:1419.15, canvas 1280px @ x:320) -->
+    <section
+      id="how-it-works"
+      class="section-x py-[80px] bg-background order-3"
+      aria-label="Jak to funguje"
+    >
+      <div class="max-w-canvas mx-auto px-0 md:px-10">
+        <div class="reveal text-center mb-[80px]">
+          <h2 class="text-headline-lg text-mirage mb-3">Jak to bude probíhat</h2>
+          <p class="text-body-md text-mako max-w-[672px] mx-auto text-center">
+            Tři jednoduché kroky k vaší nové kariéře.
+          </p>
+        </div>
+        <div class="reveal flex flex-col md:flex-row justify-between items-start gap-10 relative">
+          <div class="process-line hidden md:block absolute top-10 left-[10%] right-[10%] h-0.5 bg-outline-variant/30 -z-10" id="process-line"></div>
+
+          <div class="step-item reveal reveal-delay-1 flex-1 flex flex-col items-center text-center relative">
+            <div class="step-circle w-20 h-20 bg-white rounded-full border-4 border-titan-white flex items-center justify-center ambient-shadow mb-6 relative z-10 text-primary text-[24px] font-semibold">1</div>
+            <h3 class="text-feature-title text-mirage mb-3">Vytvoříte si profil</h3>
+            <p class="text-body-md text-mako max-w-xs">
+              Nahrajete své CV, LinkedIn nebo ručně zadáte své dovednosti a studijní obor.
+            </p>
+          </div>
+
+          <div class="step-item reveal reveal-delay-2 flex-1 flex flex-col items-center text-center relative">
+            <div class="step-circle w-20 h-20 bg-primary text-white rounded-full border-4 border-titan-white flex items-center justify-center ambient-shadow mb-6 relative z-10 text-[24px] font-semibold">2</div>
+            <h3 class="text-feature-title text-mirage mb-3">AI pracuje za vás</h3>
+            <p class="text-body-md text-mako max-w-xs">
+              Náš systém neustále skenuje trh a přináší vám nabídky s nejvyšším Match Score.
+            </p>
+          </div>
+
+          <div class="step-item reveal reveal-delay-3 flex-1 flex flex-col items-center text-center relative">
+            <div class="step-circle w-20 h-20 bg-white rounded-full border-4 border-titan-white flex items-center justify-center ambient-shadow mb-6 relative z-10 text-primary text-[24px] font-semibold">3</div>
+            <h3 class="text-feature-title text-mirage mb-3">Snadné podání</h3>
+            <p class="text-body-md text-mako max-w-xs">
+              S AI vygenerovaným dopisem a přípravou na pohovor se přihlásíte sebevědomě.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Final CTA Section (y:1928.75, width 1024 centered) -->
+    <section
+      id="cta"
+      class="section-x pb-[80px] bg-background order-4"
+      aria-label="Čekací listina"
+    >
+      <div class="reveal max-w-[1024px] mx-auto bg-primary rounded-[24px] px-8 py-16 md:px-20 md:py-20 text-center relative overflow-hidden shadow-cta">
+        <div class="cta-orb absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[64px] -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+        <div class="cta-orb cta-orb-2 absolute bottom-0 left-0 w-64 h-64 rounded-full blur-[64px] translate-y-1/2 -translate-x-1/4 pointer-events-none" style="background: rgba(46, 211, 183, 0.2);"></div>
+        <div class="relative z-10 flex flex-col items-center gap-[23px]">
+          <h2 class="text-headline-lg text-white">Buďte mezi prvními, kdo změní pravidla hry.</h2>
+          <p class="text-body-lg text-white/80 max-w-[672px]">
+            Připojte se k čekací listině ještě dnes.<br />
+            Prvních 50 uživatelů získá exkluzivní slevu na prémiové funkce.
+          </p>
+          <a class="btn-ghost inline-block bg-white text-primary text-label-md px-12 py-3 rounded-lg shadow-[0px_4px_6px_-4px_rgba(0,0,0,0.1),0px_10px_15px_-3px_rgba(0,0,0,0.1)]" href="#waitlist">
+            Zapsat se na waitlist
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 5. Footer (Figma y:2601.53) -->
+  <footer class="bg-white border-t border-outline-variant order-5">
+    <div class="reveal section-x flex flex-col md:flex-row justify-between items-center py-12 max-w-canvas mx-auto gap-8">
+      <img alt="GetJob" class="h-[92px] w-[68px] object-contain object-left transition-transform duration-300 hover:scale-105" src="assets/images/logo-footer.png" width="68" height="92" />
+      <div class="flex flex-wrap justify-center gap-8 text-body-md">
+        <a class="nav-link text-mako hover:text-primary" href="#">Ochrana osobních údajů</a>
+        <a class="nav-link text-mako hover:text-primary" href="#">Obchodní podmínky</a>
+        <a class="nav-link text-mako hover:text-primary" href="#">Kontakt</a>
+      </div>
+      <p class="text-body-md text-mako text-center md:text-right">© 2026 GetJob. Všechna práva vyhrazena.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Scroll reveal
+      const revealEls = document.querySelectorAll(".reveal");
+      if (!prefersReduced && revealEls.length) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+        );
+        revealEls.forEach((el) => observer.observe(el));
+      } else {
+        revealEls.forEach((el) => el.classList.add("is-visible"));
+      }
+
+      // Process connecting line draw-in
+      const processLine = document.getElementById("process-line");
+      if (processLine && !prefersReduced) {
+        const lineObserver = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              processLine.classList.add("is-drawn");
+              lineObserver.disconnect();
+            }
+          },
+          { threshold: 0.5 }
+        );
+        lineObserver.observe(processLine.parentElement);
+      } else if (processLine) {
+        processLine.classList.add("is-drawn");
+      }
+
+      // Header scroll state
+      const header = document.getElementById("site-header");
+      let ticking = false;
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!ticking) {
+            requestAnimationFrame(() => {
+              header.classList.toggle("is-scrolled", window.scrollY > 24);
+              ticking = false;
+            });
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
+
+      // Waitlist form feedback
+      const waitlist = document.getElementById("waitlist");
+      const btn = waitlist?.querySelector("button");
+      btn?.addEventListener("click", (e) => {
+        e.preventDefault();
+        const input = waitlist.querySelector("input");
+        if (input?.value && input.checkValidity()) {
+          btn.textContent = "Přidáno ✓";
+          btn.classList.add("bg-secondary");
+          btn.classList.remove("bg-primary");
+          setTimeout(() => {
+            btn.textContent = "Chci včasný přístup";
+            btn.classList.remove("bg-secondary");
+            btn.classList.add("bg-primary");
+            input.value = "";
+          }, 2200);
+        } else {
+          input?.focus();
+          waitlist.classList.add("ring-2", "ring-red-400/50");
+          setTimeout(() => waitlist.classList.remove("ring-2", "ring-red-400/50"), 600);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
